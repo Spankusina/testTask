@@ -1,10 +1,12 @@
 <template>
-  <nav>
-    <router-link to="/">Home</router-link> |
-    <router-link to="/about">About</router-link>
-  </nav>
   <router-view/>
 </template>
+
+<script>
+ export default {
+    name: 'App',
+ }
+</script>
 
 <style>
 #app {
@@ -14,17 +16,32 @@
   text-align: center;
   color: #2c3e50;
 }
-
-nav {
-  padding: 30px;
+.refresh {
+    display: inline-block;
+    vertical-align: bottom;
+    width: 30px;
+    height: 30px;
+    border: none;
+    background: url("./assets/button.png");
+    background-size: contain;
+    cursor: pointer;
+    margin-bottom: 5px;
+    margin-right: 20px;
 }
 
-nav a {
-  font-weight: bold;
-  color: #2c3e50;
+.refresh:hover {
+    background: url("./assets/button-hover.png");
+    background-size: contain;
 }
 
-nav a.router-link-exact-active {
-  color: #42b983;
+.refresh:active {
+    background: url("./assets/button-active.png");
+    background-size: contain;
+}
+
+.refresh:disabled {
+    background: url("./assets/button-disabled.png");
+    background-size: contain;
+    cursor: default;
 }
 </style>
