@@ -1,7 +1,7 @@
 <template>
     <div>
         <h1>Список статей</h1>
-        <button class="refresh" @click="updateStorise" :disabled="isLoaded" title="Обновить статьи"></button>
+        <button class="refresh" @click="refreshStorise" :disabled="isLoadedStories" title="Обновить статьи"></button>
         <div class="forTable">
             <p :style="{ display: !isLoadedFirstTime ? 'none' : 'block' }">Количество загруженных статей: {{
                 countLoadedStories }} из 100</p>
@@ -51,25 +51,27 @@ export default {
         return {
             stories: [],
             countLoadedStories: 0,
-            isLoaded: false,
+            isLoadedStories: false,
             isLoadedFirstTime: false
         }
     },
     methods: {
-        async updateStorise() {
-            this.isLoaded = true;
+        async refreshStorise() {
+            this.isLoadedStories = true;
             this.stories = await this.getStoriesData();
             cacheStories(this.stories);
-            this.isLoaded = false;
+            this.isLoadedStories = false;
         },
         async getStoriesData() {
             this.countLoadedStories = 0;
             let StoriesId = await getJson(urlAPI);
             const storiesData = [];
-            StoriesId = StoriesId.slice(0, 30);
+            StoriesId = StoriesId.slice(0, 100);
 
             for (const story of StoriesId) {
+                console.log(story);
                 const urlStory = `https://hacker-news.firebaseio.com/v0/item/${story}.json`;
+                // const urlStory = `https://hacker-news.firebaseio.com/v0/item/8863.json`;
                 let data = await getJson(urlStory);
                 data.time = timeConvert(data.time);
                 storiesData.push(data);
@@ -81,14 +83,14 @@ export default {
         },
         async autoUpdate() {
             setInterval(async () => {
-                await this.updateStorise();
+                await this.refreshStorise();
             }, 60000);
         }
     },
     async mounted() {
         if (loadedStories.length === 0) {
             this.isLoadedFirstTime = true;
-            await this.updateStorise();
+            await this.refreshStorise();
             this.isLoadedFirstTime = false;
             this.autoUpdate();
         } else {
