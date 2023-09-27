@@ -25,7 +25,7 @@
                             <img src="../assets/button-down.gif">
                             <h4>{{ comment.time }}</h4>
                         </div>
-                        <p>{{ comment.text }}</p>
+                        <p v-html="comment.text"></p>
                     </div>
                 </div>
             </div>
@@ -36,7 +36,7 @@
 </template>
 
 <script>
-import { getJson, timeConvert, loadedStories } from '../rest/rest.js'
+import { loadCacheStories, getCommentsDetails, getJsonDetails, getNestedCommentsDetails } from '../api/api.js'
 
 export default {
     name: 'StoryView',
@@ -48,71 +48,41 @@ export default {
         }
     },
     methods: {
-        async getCommentsData(arrayComments) {
+        async fetchNewComments(ids) {
             this.isLoadedComments = true;
             let commentData = []
-            for (const commentID of arrayComments) {
-                let urlComment = `https://hacker-news.firebaseio.com/v0/item/${commentID}.json`
-                let data = await getJson(urlComment);
-                data.time = timeConvert(data.time);
-                if (data.kids) {
-                    data.click = true;
-                } else {
-                    data.click = false;
-                }
-                commentData.push(data);
-                console.log('загружен комент')
+            for (const id of ids) {
+                commentData.push(await getCommentsDetails(id));
             }
 
             this.isLoadedComments = false;
             return commentData
         },
+
         async onClickComment(commentId) {
             const clickedComment = this.comments.find(comment => comment.id === commentId)
             if (clickedComment.kids){
                 clickedComment.click = false;
-                await this.getNestedComments(clickedComment.kids, commentId)
+                await getNestedCommentsDetails(clickedComment.kids, commentId)
             }
         },
-        async getNestedComments(arrayKids, parentComment, level = 1) {
-            for (const kid of arrayKids) {
-                const urlComment = `https://hacker-news.firebaseio.com/v0/item/${kid}.json`
-                let data = await getJson(urlComment);
-                data.time = timeConvert(data.time);
-                this.addNestedComment(data, parentComment, level);
-                if (data.kids) {
-                    await this.getNestedComments(data.kids, parentComment, level + 1)
-                }
-            }
-        },
-        addNestedComment(comment, parentComment, level) {
-            let dotHTML = '<div class="dot"></div>';
-            dotHTML = dotHTML.repeat(level);
-            const nestedCommentHTML =  `<div class="nestedComments">
-                                            ${dotHTML}
-                                            <div class="comment">
-                                                <div class="forName">
-                                                    <h4>${comment.by}</h4>
-                                                    <h4>${comment.time}</h4>
-                                                </div>
-                                                <p>${comment.text}</p>
-                                            </div>
-                                        </div>`;
-            
-            const divCommentKid = document.querySelector(`div.commentKid[data-id="${parentComment}"]`);    
-            divCommentKid.insertAdjacentHTML('beforeend', nestedCommentHTML);
-        },
+
         async refreshComments() {
             this.comments.length = 0;
-            this.comments = await this.getCommentsData(this.story.kids)
+            this.story = await getJsonDetails(this.story.id);
+            if (this.story.descendants > 0){
+                this.comments = await this.fetchNewComments(this.story.kids)
+            }
+
         }
     },
+    
     async mounted() {
-        const findStory = loadedStories.find(story => story.id == this.$route.params.id);
+        const findStory = loadCacheStories().find(story => story.id == this.$route.params.id);
         if (findStory) {
             this.story = findStory;
             if (this.story.descendants > 0) {
-                this.comments = await this.getCommentsData(this.story.kids)
+                this.comments = await this.fetchNewComments(this.story.kids)
             }
         } else {
             console.log("Объект не найден");

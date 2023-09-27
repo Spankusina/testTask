@@ -21,7 +21,7 @@
                     <td>{{ story.by }}</td>
                     <td>
                         <router-link :to="{ name: 'story', params: { id: story.id } }" class="linkToStory">
-                            {{ story.title }} {{ story.descendants }}
+                            {{ story.title }}
                         </router-link>
                     </td>
                     <td>{{ story.score }}</td>
@@ -33,23 +33,14 @@
 </template>
   
 <script>
-import { getJson, timeConvert, loadedStories, urlAPI } from '../rest/rest.js'
-
-
-
-function cacheStories(storiesData) {
-    if (loadedStories.length === 0 || loadedStories[0].id != storiesData[0].id) {
-        loadedStories.length = 0;
-        loadedStories.push(...storiesData);
-        console.log('Пришло новое');
-    }
-}
+import { saveCacheStories, loadCacheStories, getNewStoryIds, getJsonDetails } from '../api/api.js'
 
 export default {
     name: 'ListStories',
     data() {
         return {
             stories: [],
+            limitStories: 100,
             countLoadedStories: 0,
             isLoadedStories: false,
             isLoadedFirstTime: false
@@ -58,29 +49,24 @@ export default {
     methods: {
         async refreshStorise() {
             this.isLoadedStories = true;
-            this.stories = await this.getStoriesData();
-            cacheStories(this.stories);
+            this.stories = await this.fetchNewStories();
+            saveCacheStories(this.stories);
             this.isLoadedStories = false;
         },
-        async getStoriesData() {
-            this.countLoadedStories = 0;
-            let StoriesId = await getJson(urlAPI);
-            const storiesData = [];
-            StoriesId = StoriesId.slice(0, 100);
 
-            for (const story of StoriesId) {
-                console.log(story);
-                const urlStory = `https://hacker-news.firebaseio.com/v0/item/${story}.json`;
-                // const urlStory = `https://hacker-news.firebaseio.com/v0/item/8863.json`;
-                let data = await getJson(urlStory);
-                data.time = timeConvert(data.time);
-                storiesData.push(data);
+        async fetchNewStories() {
+            this.countLoadedStories = 0;
+            const storiesData = [];
+            const ids = await getNewStoryIds(0, this.limitStories);
+
+            for (const id of ids) {
+                storiesData.push(await getJsonDetails(id))
                 this.countLoadedStories++;
-                console.log("вот");
             }
 
             return storiesData;
         },
+
         async autoUpdate() {
             setInterval(async () => {
                 await this.refreshStorise();
@@ -88,13 +74,14 @@ export default {
         }
     },
     async mounted() {
-        if (loadedStories.length === 0) {
+        if (loadCacheStories().length === 0) {
             this.isLoadedFirstTime = true;
             await this.refreshStorise();
             this.isLoadedFirstTime = false;
             this.autoUpdate();
         } else {
-            this.stories.push(...loadedStories);
+            this.stories.length = 0;
+            this.stories.push(...loadCacheStories());
         }
     }
 }
