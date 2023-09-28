@@ -60,8 +60,11 @@ export default {
             const ids = await getNewStoryIds(0, this.limitStories);
 
             for (const id of ids) {
-                storiesData.push(await getJsonDetails(id))
-                this.countLoadedStories++;
+                const data = await getJsonDetails(id)
+                if (data != null){
+                    storiesData.push(data)
+                    this.countLoadedStories++;
+                }
             }
 
             return storiesData;
