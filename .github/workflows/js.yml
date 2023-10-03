@@ -24,11 +24,5 @@ jobs:
     - name: Build Vue.js project
       run: npm run build
 
-    - name: Deploy to GitHub Pages
-      run: |
-        git config user.name "$GITHUB_ACTOR"
-        git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
-        echo "node_modules" >> .gitignore
-        git add .
-        git commit -m "Build and deploy Vue.js app"
-        git push origin master:gh-pages
+    - name: run
+      run: serve dist
