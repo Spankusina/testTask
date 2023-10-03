@@ -24,5 +24,8 @@ jobs:
     - name: Build Vue.js project
       run: npm run build
 
+    - name: install serve
+      run: npm install --global serve
+
     - name: run
       run: serve dist
