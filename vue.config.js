@@ -7,6 +7,7 @@ module.exports = {
   devServer: {
     port: 3000
   },
-  outputDir: 'dist',
-  publicPath: process.env.NODE_ENV === 'production' ? '/testTask/' : '/'
+  // outputDir: 'dist',
+  // publicPath: process.env.NODE_ENV === 'production' ? '/testTask/' : '/'
+  publicPath: '/testTask'
 };

@@ -3,7 +3,7 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - master  
+      - master
 
 jobs:
   deploy:
@@ -13,27 +13,27 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Setup Node.js
+    - name: Set up Node.js
       uses: actions/setup-node@v2
       with:
-        node-version: 14  
+        node-version: 14
 
     - name: Install dependencies
       run: npm install
-
-    - name: Set up Git identity
-      run: |
-        git config user.name "Spankusina"
-        git config user.email "chaplinskiysv@gmail.com"
 
     - name: Build and deploy
       run: |
         npm run build
         npx gh-pages -d dist
 
-    - name: Deploy to GitHub Pages
+    - name: Configure SSH and deploy
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        git config --global user.email "chaplinskiysv@gmail.com"
+        git config --global user.name "Spankusina"
         git push origin gh-pages
 
