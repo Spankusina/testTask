@@ -21,19 +21,7 @@ jobs:
     - name: Install dependencies
       run: npm install
 
-    - name: Set up Git identity
-      run: |
-        git config user.name "Spankusina"
-        git config user.email "chaplinskiysv@gmail.com"
-
     - name: Build and deploy
       run: |
         npm run build
         npx gh-pages -d dist
-
-    - name: Deploy to GitHub Pages
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        git push origin gh-pages
-
